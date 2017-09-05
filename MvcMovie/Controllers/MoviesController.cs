@@ -1,18 +1,17 @@
-﻿using System;
+﻿using MvcMovie.Models;
+using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Entity;
 using System.Linq;
 using System.Net;
-using System.Web;
 using System.Web.Mvc;
-using MvcMovie.Models;
 
 namespace MvcMovie.Controllers
 {
     public class MoviesController : Controller
     {
-        private MovieDBContext db = new MovieDBContext();
+        //private MovieDBContext db = new MovieDBContext();
+        private static IList<Movie> filmes = new List<Movie>();
 
         // GET: Movies
         //public ActionResult Index()
@@ -51,27 +50,27 @@ namespace MvcMovie.Controllers
         {
             var GenreLst = new List<string>();
 
-            var GenreQry = from d in db.Movies
+            var GenreQry = from d in filmes
                            orderby d.Genre
                            select d.Genre;
 
             GenreLst.AddRange(GenreQry.Distinct());
             ViewBag.movieGenre = new SelectList(GenreLst);
 
-            var movies = from m in db.Movies
-                         select m;
+            var _filmes = from m in filmes
+                          select m;
 
             if (!String.IsNullOrEmpty(searchString))
             {
-                movies = movies.Where(s => s.Title.Contains(searchString));
+                _filmes = _filmes.Where(s => s.Title.Contains(searchString));
             }
 
             if (!string.IsNullOrEmpty(movieGenre))
             {
-                movies = movies.Where(x => x.Genre == movieGenre);
+                _filmes = _filmes.Where(x => x.Genre == movieGenre);
             }
 
-            return View(movies);
+            return View(_filmes);
         }
 
         // GET: Movies/Details/5
@@ -81,12 +80,12 @@ namespace MvcMovie.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Movie movie = db.Movies.Find(id);
-            if (movie == null)
+            Movie filme = filmes.Where(x => x.ID == id).FirstOrDefault();
+            if (filme == null)
             {
                 return HttpNotFound();
             }
-            return View(movie);
+            return View(filme);
         }
 
         // GET: Movies/Create
@@ -104,8 +103,8 @@ namespace MvcMovie.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.Movies.Add(movie);
-                db.SaveChanges();
+                filmes.Add(movie);
+                //db.SaveChanges();
                 return RedirectToAction("Index");
             }
 
@@ -119,7 +118,7 @@ namespace MvcMovie.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Movie movie = db.Movies.Find(id);
+            Movie movie = filmes.Where(x => x.ID == id).FirstOrDefault();
             if (movie == null)
             {
                 return HttpNotFound();
@@ -136,8 +135,8 @@ namespace MvcMovie.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.Entry(movie).State = EntityState.Modified;
-                db.SaveChanges();
+                //db.Entry(movie).State = EntityState.Modified;
+                //db.SaveChanges();
                 return RedirectToAction("Index");
             }
             return View(movie);
@@ -150,7 +149,7 @@ namespace MvcMovie.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Movie movie = db.Movies.Find(id);
+            Movie movie = filmes.Where(x => x.ID == id).FirstOrDefault();
             if (movie == null)
             {
                 return HttpNotFound();
@@ -163,19 +162,10 @@ namespace MvcMovie.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            Movie movie = db.Movies.Find(id);
-            db.Movies.Remove(movie);
-            db.SaveChanges();
+            Movie movie = filmes.Where(x => x.ID == id).FirstOrDefault();
+            filmes.Remove(movie);
+            //db.SaveChanges();
             return RedirectToAction("Index");
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }
